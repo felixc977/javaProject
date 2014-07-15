@@ -12,7 +12,6 @@ public class GraberMain {
 
 		try {
 			gGraber.doAction();
-			gGraber.doActionPart2();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

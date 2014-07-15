@@ -7,6 +7,8 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -21,7 +23,6 @@ public class MaddawParser {
 
 	private Vector<JavEntry> dataLst;
 	private JSONArray jTotalData;
-	private boolean bFinish = false;
 
 	public MaddawParser() {
 		jTotalData = new JSONArray();
@@ -30,10 +31,6 @@ public class MaddawParser {
 
 	public JSONArray getJsonData() {
 		return jTotalData;
-	}
-
-	public boolean isFinished() {
-		return bFinish;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -48,8 +45,6 @@ public class MaddawParser {
 		jObj.put("imgSrc", avEntry.imgSrc);
 		jObj.put("imgPath", avEntry.imgPath);
 		jObj.put("length", avEntry.length);
-		
-//		System.out.printf("transData imgPath  %s \n", avEntry.imgPath);
 
 		JSONArray jArray1 = new JSONArray();
 		for (String castName : avEntry.cast) {
@@ -86,8 +81,6 @@ public class MaddawParser {
 		} catch (ClassCastException e) {
 			;
 		}
-		
-//		System.out.printf("transJsonData imgPath  %s \n", avObj.imgPath);
 
 		ArrayList<String> tmpArrayCast = new ArrayList<String>();
 		JSONArray jArrayCast = (JSONArray)jObj.get("cast");
@@ -109,193 +102,73 @@ public class MaddawParser {
 	public void doAction() throws IOException {
 		String inUrl = "http://maddawgjav.net/";
 		Document doc = Jsoup.connect(inUrl).userAgent("Mozilla").get();
-		boolean bRet = false;
 		
-		{
-			Element content = doc.getElementById("content");
-			if (content != null) {
-				bRet = true;
-			}
-		}
-		
-		if (bRet) {
-			Elements contents = doc.getElementsByTag("div");
-			for (Element content : contents) {
-				if (content.attr("id").contains("post-")) {
+		Element content = doc.getElementById("content");
+		if (content != null) {
+			Elements divContents = doc.getElementsByTag("div");
+			for (Element divContent : divContents) {
+				if (divContent.attr("id").contains("post-")) {
 					JavEntry tmpV = new JavEntry();
-					System.out.println("Hits! "+content.attr("id").toString());
-					Elements links = content.getElementsByTag("a");
+					Elements links = divContent.getElementsByTag("a");
 					Element link = links.get(0);
-					System.out.println(link.attr("title").toString());
-					System.out.println(link.attr("href").toString());
 					
-					tmpV.id=(content.attr("id").toString());
-					tmpV.title=(link.attr("title").toString());
+					tmpV.id=(divContent.attr("id").toString());
+					System.out.println("id: "+tmpV.id);
+					tmpV.title=(link.html());
+					System.out.println("title: "+tmpV.title);
 					tmpV.link =(link.attr("href").toString());
+					//System.out.println(tmpV.link);
+				
+					Document subDoc = Jsoup.connect(tmpV.link).userAgent("Mozilla").get();
+					tmpV.imgSrc = getImage(subDoc);
+					tmpV.dllink = getDLink(subDoc, tmpV.id);
+					getDate(subDoc);
+					// Final
 					dataLst.add(tmpV);
 				}
 			}
 		}
 	}
 	
-	public void doActionPart2() throws IOException {
+	public String getImage(Document doc) throws IOException {
+		String imgSrc = null;
+		Elements contents = doc.getElementsByClass("alignnone");
+		imgSrc = contents.get(0).attr("src").toString();
+		//System.out.println("imgsrc="+imgSrc);
+		return imgSrc;
+	}
+	
+	public Vector<String> getDLink(Document doc, String EntryId) throws IOException {
+		Vector<String> dlink = new Vector<String>();
+		Element contentMain = doc.getElementById(EntryId);
+		Elements contents = contentMain.getElementsByTag("a");
+		for (Element content : contents) {
+			if (content.attr("href").contains("rapidgator")) {
+				//System.out.println("dllink="+content.attr("href").toString());
+				dlink.add(content.attr("href").toString());
+			}				
+		}
+
+		return dlink;
+	}
+	
+	public int getDate(Document doc) throws IOException {
+		Element content = doc.getElementsByClass("post-info-date").first();
+		String dateInfo = content.html();
 		
-		for(JavEntry tmpEntry:dataLst) {
-			String inUrl = tmpEntry.link;
-			Document doc = Jsoup.connect(inUrl).userAgent("Mozilla").get();
-			Elements contents = doc.getElementsByClass("alignnone");
-			for (Element content : contents) {
-				System.out.println("imgsrc="+content.attr("src").toString());
-				tmpEntry.imgSrc = content.attr("src").toString();
-			}
-			
-			Element contentMain = doc.getElementById(tmpEntry.id);
-			contents = contentMain.getElementsByTag("a");
-			for (Element content : contents) {
-				if (content.attr("href").contains("rapidgator")) {
-					System.out.println("dllink="+content.attr("href").toString());
-					tmpEntry.dllink.add(content.attr("href").toString());
-				}				
-			}
-		}
-	}
-
-	public Document getUrl(String javId) throws IOException {
-		String url = strQueryUrl + javId;
-		Document doc = Jsoup.connect(url).userAgent("Mozilla").get();
-
-		boolean bRet = false;
-
-		{
-			Element content = doc.getElementById("video_id");
-			if (content != null) {
-				bRet = true;
+		//Posted by noturbiatch on July 15, 2014
+		String spatt = "([a-zA-Z]+)\\s([0-9]+),\\s([0-9]+)";
+		Pattern patt = Pattern.compile(spatt);
+		Matcher matcher = patt.matcher(dateInfo);
+		if (matcher.find()) {
+			for (int i=0;i<=matcher.groupCount();i++) {
+				System.out.println(i+" = "+matcher.group(i));
 			}
 		}
 
-		if (!bRet) {
-			Elements contents = doc.getElementsByClass("video");
-			for (Element content : contents) {
-				Elements links = content.getElementsByTag("a");
-				for (Element link : links) {
-					if (link.attr("title").contains(javId)) {
-						String newKeyword = link.attr("href").substring(5);
-						doc = Jsoup.connect(strGetIdUrl + newKeyword)
-								.userAgent("Mozilla").get();
-						bRet = true;
-					}
-				}
-			}
-		}
+		System.out.println("getDate="+content.html());
 
-		if (bRet)
-			return doc;
-		else
-			return null;
-	}
-
-	public static JavEntry getAttr(Document doc) throws IOException {
-		JavEntry avEntry = new JavEntry();
-
-		// 1.title
-		{
-			Element content = doc.getElementById("video_title");
-			Elements links = content.getElementsByTag("a");
-			for (Element link : links) {
-				avEntry.title = link.text();
-				// System.out.printf("title:%s\n", avEntry.title);
-			}
-		}
-
-		// 2.image
-		Element content2 = doc.getElementById("video_jacket_img");
-		avEntry.imgSrc = content2.attr("src");
-		// System.out.printf("img:%s\n", avEntry.imgSrc);
-
-		// 3.id
-		Element content3 = doc.getElementById("video_id");
-		Elements links3 = content3.getElementsByClass("text");
-		for (Element link : links3) {
-			avEntry.id = link.text();
-			// System.out.printf("id:%s\n", avEntry.id);
-		}
-
-		// 4.date
-		{
-			Element content = doc.getElementById("video_date");
-			Elements links = content.getElementsByClass("text");
-			for (Element link : links) {
-				avEntry.date = link.text();
-				// System.out.printf("date:%s\n", link.text());
-			}
-		}
-
-		// length
-		{
-			Element content = doc.getElementById("video_length");
-			Elements links = content.getElementsByClass("text");
-			for (Element link : links) {
-				avEntry.length = Integer.valueOf(link.text());
-				// System.out.printf("length:%s\n", link.text());
-			}
-		}
-		// director
-		{
-			Element content = doc.getElementById("video_director");
-			Elements links = content.getElementsByClass("text");
-			for (Element link : links) {
-				avEntry.director = link.text();
-				// System.out.printf("director:%s\n", link.text());
-			}
-		}
-		// maker
-		{
-			Element content = doc.getElementById("video_maker");
-			Elements links = content.getElementsByClass("text");
-			for (Element link : links) {
-				avEntry.maker = link.text();
-				// System.out.printf("maker:%s\n", link.text());
-			}
-		}
-		// label
-		{
-			Element content = doc.getElementById("video_label");
-			Elements links = content.getElementsByClass("text");
-			for (Element link : links) {
-				avEntry.label = link.text();
-				// System.out.printf("label:%s\n", link.text());
-			}
-		}
-		// genre
-		{
-			Elements contents = doc.getElementsByClass("genre");
-			// System.out.printf("genre:");
-			for (Element content : contents) {
-				Elements links = content.getElementsByTag("a");
-				for (Element link : links) {
-					avEntry.genre.add(link.text());
-					// System.out.printf("%s ",
-					// avEntry.genre.get(avEntry.genre.size()-1));
-				}
-			}
-			// System.out.printf("\n");
-		}
-		// cast
-		{
-			Elements contents = doc.getElementsByClass("star");
-			// System.out.printf("cast:");
-			for (Element content : contents) {
-				Elements links = content.getElementsByTag("a");
-				for (Element link : links) {
-					avEntry.cast.add(link.text());
-					// System.out.printf("%s ",
-					// avEntry.cast.get(avEntry.cast.size()-1));
-				}
-			}
-			// System.out.printf("\n");
-		}
-
-		return avEntry;
+		return 0;
 	}
 
 	public static void saveImage(String imageUrl, String destinationFile)
