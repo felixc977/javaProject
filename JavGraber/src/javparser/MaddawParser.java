@@ -70,6 +70,7 @@ public class MaddawParser {
 		JavEntry avObj = new JavEntry();
 		avObj.title = (String) jObj.get("title");
 		avObj.imgSrc = (String) jObj.get("imgSrc");
+		avObj.link = (String) jObj.get("link");
 		avObj.imgPath = (String) jObj.get("imgPath");
 		avObj.id = (String) jObj.get("id");
 		avObj.date = (String) jObj.get("date");
@@ -155,6 +156,9 @@ public class MaddawParser {
 	public int getDate(Document doc) throws IOException {
 		Element content = doc.getElementsByClass("post-info-date").first();
 		String dateInfo = content.html();
+		int month = 1;
+		int day = 1;
+		int year = 2000;
 		
 		//Posted by noturbiatch on July 15, 2014
 		String spatt = "([a-zA-Z]+)\\s([0-9]+),\\s([0-9]+)";
@@ -164,9 +168,51 @@ public class MaddawParser {
 			for (int i=0;i<=matcher.groupCount();i++) {
 				System.out.println(i+" = "+matcher.group(i));
 			}
+			year = Integer.parseInt(matcher.group(3));
+			day = Integer.parseInt(matcher.group(2));
+			switch (matcher.group(1)) {
+			case "January":
+				month = 1;
+				break;
+			case "February":
+				month = 2;
+				break;
+			case "March":
+				month = 3;
+				break;
+			case "April":
+				month = 4;
+				break;
+			case "May":
+				month = 5;
+				break;
+			case "June":
+				month = 6;
+				break;
+			case "July":
+				month = 7;
+				break;
+			case "August":
+				month = 8;
+				break;
+			case "September":
+				month = 9;
+				break;
+			case "October":
+				month = 10;
+				break;
+			case "November":
+				month = 11;
+				break;
+			case "December":
+				month = 12;
+				break;
+			default:
+				System.out.println("getDat: Default");
+			}
 		}
 
-		System.out.println("getDate="+content.html());
+		System.out.println("getDate="+year+"/"+month+"/"+day);
 
 		return 0;
 	}

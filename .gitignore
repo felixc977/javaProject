@@ -2,4 +2,15 @@
 .metadata/
 .recommenders/
 __MACOSX/
+.classpath
+*.prefs
 
+*.class
+
+*.class
+
+DirReader/.classpath
+
+DirReader/.classpath
+
+*.prefs
