@@ -7,6 +7,7 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -14,6 +15,7 @@ import java.io.IOException;
 import java.util.Vector;
 
 import javax.swing.AbstractAction;
+import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -38,6 +40,8 @@ public class MasterPanel extends JPanel {
 	private JTableModel model;
 	private JScrollPane scrollPane;
 	private JTextField textfield;
+	private JPanel subPanel;
+	private JButton actionButton;
 	
 	private int selectItem;
 	private String dirPath;
@@ -65,8 +69,24 @@ public class MasterPanel extends JPanel {
 			e1.printStackTrace();
 		}
 
+		subPanel = new JPanel();
+		subPanel.setLayout(new BorderLayout());
+		this.add(subPanel, BorderLayout.NORTH);
+		actionButton = new JButton("Update");
+		subPanel.add(actionButton, BorderLayout.EAST);
+		actionButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					MaddawParser.doAction(2);
+					MaddawParser.close();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				setFocus(selectItem);
+			}
+		});
 		textfield = new JTextField();
-		this.add(textfield, BorderLayout.NORTH);
+		subPanel.add(textfield, BorderLayout.CENTER);
 		textfield.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "key_enter");
 		textfield.getActionMap().put("key_enter", new AbstractAction() {
 			private static final long serialVersionUID = 1L;
@@ -120,9 +140,7 @@ public class MasterPanel extends JPanel {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				doExecute();
-				table.setCellSelectionEnabled(true);
-				table.changeSelection(selectItem, 0, false, false);
-				table.requestFocus();
+				setFocus(selectItem);
 			}
 		});
 		table.getActionMap().put("key_enter", new AbstractAction() {
@@ -170,7 +188,13 @@ public class MasterPanel extends JPanel {
 		};
 		table.addMouseListener(mouseListener);
 	}
-	
+
+	private void setFocus(int idx) {
+		table.setCellSelectionEnabled(true);
+		table.changeSelection(selectItem, 0, false, false);
+		table.requestFocus();
+	}
+
 	private void doExecute() {
 		if (selectItem>MaddawParser.length())
 		{

@@ -60,7 +60,7 @@ class JfmMain extends JFrame
 		getContentPane().add(masterPanel,  BorderLayout.WEST);
 
 		// slavePanel
-		slavePanel = new SlavePanel(this);
+		slavePanel = new SlavePanel();
 		getContentPane().add(slavePanel,  BorderLayout.CENTER);
 
 	    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

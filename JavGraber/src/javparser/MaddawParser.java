@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Vector;
@@ -72,7 +73,7 @@ public class MaddawParser {
 		}
 	}
 	
-	public boolean checkIfExist(String inId) {
+	public static boolean checkIfExist(String inId) {
 		boolean bHit=false;
 		for (int i = 0; i < jDataList.size(); i++) {
 			JavEntry jTmpObj = jDataList.get(i);
@@ -86,8 +87,8 @@ public class MaddawParser {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public void doAction() throws IOException {
-		for (int i=1;i<=2;i++) {
+	public static void doAction(int actDepth) throws IOException {
+		for (int i=1;i<=actDepth;i++) {
 			String inUrl = String.format("%s%d", strGetIdUrl, i);
 			Document doc = Jsoup.connect(inUrl).userAgent("Mozilla").get();
 			
@@ -117,8 +118,14 @@ public class MaddawParser {
 						tmpV.imgSrc = getAttrImage(subDoc);
 						tmpV.dllink = getAttrDLink(subDoc, tmpV.id);
 						tmpV.date = getAttrDate(subDoc);
-						tmpV.imgPath = DbRoot+tmpV.id+".jpg";						
-						saveImage(tmpV.imgSrc, tmpV.imgPath);
+						tmpV.imgPath = DbRoot+tmpV.id+".jpg";
+						try {
+							saveImage(tmpV.imgSrc, tmpV.imgPath);
+						} catch (IOException e) {
+							System.out.println("[Error] saveImage");
+							tmpV.imgPath = "";
+						}
+						
 						// Final
 						jDataList.add(tmpV);
 						JSONObject jObj = transData(jDataList.lastElement());
@@ -129,7 +136,7 @@ public class MaddawParser {
 		}		
 	}
 	
-	public void close() throws IOException {
+	public static void close() throws IOException {
 		/*Finish*/
 		StringWriter out = new StringWriter();
 		jTotalData.writeJSONString(out);
@@ -142,7 +149,7 @@ public class MaddawParser {
 	}
 
 	@SuppressWarnings("unchecked")
-	public JSONObject transData(JavEntry avEntry) {
+	public static JSONObject transData(JavEntry avEntry) {
 		JSONObject jObj = new JSONObject();
 		jObj.put("title", avEntry.title);
 		jObj.put("link", avEntry.link);
@@ -316,8 +323,7 @@ public class MaddawParser {
 		return jDataList.get(idx);
 	}
 
-	public static void saveImage(String imageUrl, String destinationFile)
-			throws IOException {
+	public static void saveImage(String imageUrl, String destinationFile) throws IOException {
 		URL url = new URL(imageUrl);
 		InputStream is = url.openStream();
 		OutputStream os = new FileOutputStream(destinationFile);

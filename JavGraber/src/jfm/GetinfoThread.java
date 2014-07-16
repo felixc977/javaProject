@@ -1,6 +1,5 @@
 package jfm;
 
-import java.io.File;
 
 public class GetinfoThread implements Runnable {
 	int gIdx;

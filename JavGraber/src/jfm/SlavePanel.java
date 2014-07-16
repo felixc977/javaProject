@@ -17,7 +17,6 @@ import javparser.MaddawParser;
 
 public class SlavePanel extends JPanel {
 	private static final long serialVersionUID = 1L;
-	private JfmMain parentFrame;
 	private JLabel iconLabel;
 	private ImageIcon iImage;
 	private String imgPath = null;
@@ -42,8 +41,7 @@ public class SlavePanel extends JPanel {
 	    }
 	}
 
-	SlavePanel(JfmMain inFrame) {
-		parentFrame = inFrame;
+	SlavePanel() {
 		setLayout(new BorderLayout());
 		setBorder(BorderFactory.createLineBorder(Color.black));
 
