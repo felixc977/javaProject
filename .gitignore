@@ -14,3 +14,6 @@ DirReader/.classpath
 DirReader/.classpath
 
 *.prefs
+
+_DB_Madd/
+*.class

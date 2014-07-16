@@ -1,9 +1,16 @@
 package javparser;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.StringWriter;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Vector;
@@ -12,31 +19,137 @@ import java.util.regex.Pattern;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 public class MaddawParser {
-	String strQueryUrl = "http://www.javlibrary.com/tw/vl_searchbyid.php?keyword=";
-    String strGetIdUrl = "http://maddawgjav.net/page/";
+	private String strGetIdUrl = "http://maddawgjav.net/page/";
+    private String DbRoot = "./_DB_Madd/";
+    private String DbPath = DbRoot+"_DB_Madd.json";
 
-	private Vector<JavEntry> dataLst;
+	private Vector<JavEntry> jDataList;
 	private JSONArray jTotalData;
 
 	public MaddawParser() {
-		jTotalData = new JSONArray();
-		dataLst = new Vector<JavEntry>();
+		try {
+			init();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
-	public JSONArray getJsonData() {
-		return jTotalData;
+	private void init() throws IOException, ParseException {
+		jTotalData = new JSONArray();
+		jDataList = new Vector<JavEntry>();
+		
+		File fileJav = new File(DbRoot);
+		if (fileJav.exists()) {
+			System.out.println("dir exist\n");
+		} else {
+			System.out.println("dir create\n");
+			System.out.println(fileJav.mkdir());
+		}
+		
+		try {
+			FileReader fileReader = new FileReader(DbPath);
+			BufferedReader bufferedReader = new BufferedReader(fileReader);
+			String jsonText = bufferedReader.readLine();
+			JSONParser parser = new JSONParser();
+			Object obj = parser.parse(jsonText);
+			jTotalData = (JSONArray) obj;
+			
+			for (int i = 0; i < jTotalData.size(); i++) {
+				JavEntry jEntry = transJsonData((JSONObject) jTotalData.get(i));
+				jDataList.add(jEntry);
+			}
+			bufferedReader.close();
+		} catch (FileNotFoundException e) {
+			;			
+		}
+	}
+	
+	public boolean checkIfExist(String inId) {
+		boolean bHit=false;
+		for (int i = 0; i < jDataList.size(); i++) {
+			JavEntry jTmpObj = jDataList.get(i);
+			// System.out.printf("%s %s \n", jTmpObj.get("id"), javId);
+			if (inId.matches(jTmpObj.id)) {
+				bHit = true;
+				break;
+			}
+		}
+		return bHit;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void doAction() throws IOException {
+		for (int i=1;i<=2;i++) {
+			String inUrl = String.format("%s%d", strGetIdUrl, i);
+			Document doc = Jsoup.connect(inUrl).userAgent("Mozilla").get();
+			
+			Element content = doc.getElementById("content");
+			if (content != null) {
+				Elements divContents = doc.getElementsByTag("div");
+				for (Element divContent : divContents) {
+					if (divContent.attr("id").contains("post-")) {
+						JavEntry tmpV = new JavEntry();
+						Elements links = divContent.getElementsByTag("a");
+						Element link = links.get(0);
+						
+						tmpV.id=(divContent.attr("id").toString());
+						System.out.println("id: "+tmpV.id);
+						
+						if (checkIfExist(tmpV.id)) {
+							System.out.println(" alreay exist!");
+							continue;
+						}
+						
+						tmpV.title=(link.html());
+						//System.out.println("title: "+tmpV.title);
+						tmpV.link =(link.attr("href").toString());
+						//System.out.println(tmpV.link);
+					
+						Document subDoc = Jsoup.connect(tmpV.link).userAgent("Mozilla").get();
+						tmpV.imgSrc = getImage(subDoc);
+						tmpV.dllink = getDLink(subDoc, tmpV.id);
+						tmpV.date = getDate(subDoc);
+						tmpV.imgPath = DbRoot+tmpV.id+".jpg";						
+						saveImage(tmpV.imgSrc, tmpV.imgPath);
+						// Final
+						jDataList.add(tmpV);
+						JSONObject jObj = transData(jDataList.lastElement());
+						jTotalData.add(jObj);
+					}
+				}
+			}
+		}		
+	}
+	
+	public void close() throws IOException {
+		/*Finish*/
+		StringWriter out = new StringWriter();
+		jTotalData.writeJSONString(out);
+		String jsonText2 = out.toString().replaceAll("\\\\", "");
+
+		FileWriter fileWriter = new FileWriter(DbPath);
+		BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+		bufferedWriter.write(jsonText2);
+		bufferedWriter.close();
 	}
 
 	@SuppressWarnings("unchecked")
 	public JSONObject transData(JavEntry avEntry) {
 		JSONObject jObj = new JSONObject();
 		jObj.put("title", avEntry.title);
+		jObj.put("link", avEntry.link);
 		jObj.put("id", avEntry.id);
 		jObj.put("date", avEntry.date);
 		jObj.put("director", avEntry.director);
@@ -57,6 +170,12 @@ public class MaddawParser {
 			jArray2.add(genreType);
 		}
 		jObj.put("genre", jArray2);
+		
+		JSONArray jArray3 = new JSONArray();
+		for (String dllink : avEntry.dllink) {
+			jArray3.add(dllink);
+		}
+		jObj.put("dllink", jArray3);
 
 		return jObj;
 	}
@@ -64,13 +183,14 @@ public class MaddawParser {
 	public JavEntry transJsonData(JSONObject jObj) {
 		
 		if (jObj==null){
+			System.out.println("Null jObj");
 			return null;
 		}
 		
 		JavEntry avObj = new JavEntry();
 		avObj.title = (String) jObj.get("title");
-		avObj.imgSrc = (String) jObj.get("imgSrc");
 		avObj.link = (String) jObj.get("link");
+		avObj.imgSrc = (String) jObj.get("imgSrc");
 		avObj.imgPath = (String) jObj.get("imgPath");
 		avObj.id = (String) jObj.get("id");
 		avObj.date = (String) jObj.get("date");
@@ -96,39 +216,15 @@ public class MaddawParser {
 			tmpArrayGenre.add((String)genreName);
 		}
 		avObj.genre = new ArrayList<String>(tmpArrayGenre);
+		
+		ArrayList<String> tmpArrayDllink = new ArrayList<String>();
+		JSONArray jArrayDllink = (JSONArray)jObj.get("dllink");
+		for (Object dllink :jArrayDllink) {
+			tmpArrayDllink.add((String)dllink);
+		}
+		avObj.dllink = new ArrayList<String>(tmpArrayDllink);
 
 		return avObj;
-	}
-	
-	public void doAction() throws IOException {
-		String inUrl = "http://maddawgjav.net/";
-		Document doc = Jsoup.connect(inUrl).userAgent("Mozilla").get();
-		
-		Element content = doc.getElementById("content");
-		if (content != null) {
-			Elements divContents = doc.getElementsByTag("div");
-			for (Element divContent : divContents) {
-				if (divContent.attr("id").contains("post-")) {
-					JavEntry tmpV = new JavEntry();
-					Elements links = divContent.getElementsByTag("a");
-					Element link = links.get(0);
-					
-					tmpV.id=(divContent.attr("id").toString());
-					System.out.println("id: "+tmpV.id);
-					tmpV.title=(link.html());
-					System.out.println("title: "+tmpV.title);
-					tmpV.link =(link.attr("href").toString());
-					//System.out.println(tmpV.link);
-				
-					Document subDoc = Jsoup.connect(tmpV.link).userAgent("Mozilla").get();
-					tmpV.imgSrc = getImage(subDoc);
-					tmpV.dllink = getDLink(subDoc, tmpV.id);
-					getDate(subDoc);
-					// Final
-					dataLst.add(tmpV);
-				}
-			}
-		}
 	}
 	
 	public String getImage(Document doc) throws IOException {
@@ -153,7 +249,7 @@ public class MaddawParser {
 		return dlink;
 	}
 	
-	public int getDate(Document doc) throws IOException {
+	public String getDate(Document doc) throws IOException {
 		Element content = doc.getElementsByClass("post-info-date").first();
 		String dateInfo = content.html();
 		int month = 1;
@@ -165,9 +261,6 @@ public class MaddawParser {
 		Pattern patt = Pattern.compile(spatt);
 		Matcher matcher = patt.matcher(dateInfo);
 		if (matcher.find()) {
-			for (int i=0;i<=matcher.groupCount();i++) {
-				System.out.println(i+" = "+matcher.group(i));
-			}
 			year = Integer.parseInt(matcher.group(3));
 			day = Integer.parseInt(matcher.group(2));
 			switch (matcher.group(1)) {
@@ -212,9 +305,11 @@ public class MaddawParser {
 			}
 		}
 
-		System.out.println("getDate="+year+"/"+month+"/"+day);
+		String sRet = "";
+		sRet = String.format("%04d%02d%02d", year, month, day);
+		//System.out.println("getDate="+sRet);
 
-		return 0;
+		return sRet;
 	}
 
 	public static void saveImage(String imageUrl, String destinationFile)
