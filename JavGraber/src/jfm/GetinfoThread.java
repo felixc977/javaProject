@@ -1,15 +1,21 @@
 package jfm;
 
+import java.io.IOException;
+
+import org.json.simple.parser.ParseException;
+
+import javparser.MaddawParser;
+
 
 public class GetinfoThread implements Runnable {
 	int gIdx;
 	String gsUrl;
-	JfmMain mainFrame;
+	MasterPanel parentCompo;
 	Thread t;
 
-	GetinfoThread(int idx, JfmMain inFrame) {
+	GetinfoThread(int idx, MasterPanel inPanel) {
 		gIdx = idx;
-		mainFrame = inFrame;
+		parentCompo = inPanel;
 		t = new Thread(this, "F"+Integer.toString(idx));
 	}
 	
@@ -20,10 +26,16 @@ public class GetinfoThread implements Runnable {
 	public void run() {
 		do {
 			System.out.printf("%d gogo\n", gIdx);
-			mainFrame.parseAction(gIdx);
+			try {
+				MaddawParser.init();
+				MaddawParser.doAction(1);
+				MaddawParser.close();
+			} catch (IOException | ParseException e) {
+				e.printStackTrace();
+			}			
 		} while (false);
+		parentCompo.setPath();
 		System.out.printf("%d close\n", gIdx);
 		return;
 	}
-
 }

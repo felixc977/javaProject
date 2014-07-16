@@ -8,10 +8,16 @@ class JTableModel extends AbstractTableModel {
 	private static final long serialVersionUID = 1L;
 
 	Vector<Vector<Object>> rowData = new Vector<Vector<Object>>();
-	String columnNames[] = { "_", "ID", "TITLE" };
+	String columnNames[] = { "_", "Date", "TITLE" };
 
 	JTableModel(){
 		;
+	}
+	
+	public void clearAllRow() {
+		for (int i = getRowCount(); i > 0; i--) {
+			removeRow(i - 1);
+		}
 	}
 	
 	public void removeRow(int row) {

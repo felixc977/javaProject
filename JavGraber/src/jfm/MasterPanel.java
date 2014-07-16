@@ -42,15 +42,14 @@ public class MasterPanel extends JPanel {
 	private JTextField textfield;
 	private JPanel subPanel;
 	private JButton actionButton;
+	private MasterPanel mySelf;
 	
 	private int selectItem;
-	private String dirPath;
 	public long startT;
 	
 	MasterPanel(String inPath, JfmMain inFrame) {
 		startT = System.currentTimeMillis();
 		parentFrame = inFrame;
-		dirPath = inPath;
 		this.setLayout(new BorderLayout());
 		init();
 	}
@@ -68,6 +67,8 @@ public class MasterPanel extends JPanel {
 		} catch (IOException |ParseException e1) {
 			e1.printStackTrace();
 		}
+		
+		mySelf = this;
 
 		subPanel = new JPanel();
 		subPanel.setLayout(new BorderLayout());
@@ -76,12 +77,8 @@ public class MasterPanel extends JPanel {
 		subPanel.add(actionButton, BorderLayout.EAST);
 		actionButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				try {
-					MaddawParser.doAction(2);
-					MaddawParser.close();
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
+				GetinfoThread t1=new GetinfoThread(selectItem, mySelf);
+				t1.start();
 				setFocus(selectItem);
 			}
 		});
@@ -111,7 +108,7 @@ public class MasterPanel extends JPanel {
 		model = new JTableModel();
 		table = new JTable(model);
 		getDiffTime("PartA");
-		setPath(dirPath);
+		setPath();
 
 		// Add the table to a scrolling pane
 		table.setDefaultRenderer(Object.class,new ColorTable());
@@ -201,7 +198,7 @@ public class MasterPanel extends JPanel {
 			System.out.println("[Error]out of range");
 			return;
 		}
-		textfield.setText(MaddawParser.get(selectItem).title);
+		//textfield.setText(MaddawParser.get(selectItem).id);
 		boolean bCheckd = model.getCheckAt(selectItem);
 		model.setValueAt(!bCheckd, selectItem, 0);
 		model.fireTableDataChanged();
@@ -223,53 +220,21 @@ public class MasterPanel extends JPanel {
 		Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
 		clpbrd.setContents(stringSelection, null);
 	}
-	
-	public class RunThread implements Runnable {
-		String sName;
-		String[] sCmd;
-		Thread t;
 
-		RunThread(String inName, String[] inCmd) {
-			sName = inName;
-			sCmd = inCmd;
-			t = new Thread(this, sName);
-		}
-		
-		public void start() {
-			t.start();
-		}
+	public void setPath() {
+		/*clear all*/
+		model.clearAllRow();
 
-		public void run() {
-			Process p;
-			try {
-				System.out.print("start Play\n");
-				p = Runtime.getRuntime().exec(sCmd);
-				p.waitFor();
-				System.out.print("end Play\n");
-			} catch (IOException | InterruptedException e1) {
-				System.out.print("Runtime failed\n");
-			}
-		}
-	}
-
-	public void setPath(String inPath) {
-		dirPath = inPath;
-		
-		for (int i = model.getRowCount(); i > 0; i--) {
-			model.removeRow(i - 1);
-		}
-
+		/*Insert new row*/
 		Vector<Object> vcTemp = new Vector<>();
-		
 		for (int i = 0; i <MaddawParser.length() ; i++) {
 			vcTemp = new Vector<Object>();
-			String jId = MaddawParser.get(i).id;
+			String jDate = MaddawParser.get(i).date;
 			String jTitle = MaddawParser.get(i).title;
 			vcTemp.add(Boolean.FALSE);
-			vcTemp.add(jId);
+			vcTemp.add(jDate);
 			vcTemp.add(jTitle);			
 			model.addRow(vcTemp);
-			//System.out.println(jTitle);
 		}
 		model.fireTableDataChanged();
 	}

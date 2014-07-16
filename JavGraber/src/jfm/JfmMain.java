@@ -68,12 +68,13 @@ class JfmMain extends JFrame
 
 	public void onEvent(int selectIdx){
 		slavePanel.setToWaitState();
-		GetinfoThread t1 = new GetinfoThread(selectIdx, this);
+		NotifyThread t1 = new NotifyThread(selectIdx, this);
 		t1.start();
 	}
 	
 	public void parseAction(int selectIdx){
 		System.out.print("parseAction\n");
+		//slavePanel.setToWaitState();
 		slavePanel.setInfo(selectIdx);
 	}
 	
