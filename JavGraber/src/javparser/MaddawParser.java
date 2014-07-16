@@ -27,26 +27,22 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 public class MaddawParser {
-	private String strGetIdUrl = "http://maddawgjav.net/page/";
-    private String DbRoot = "./_DB_Madd/";
-    private String DbPath = DbRoot+"_DB_Madd.json";
+	public static String strGetIdUrl = "http://maddawgjav.net/page/";
+	public static String DbRoot = "./_DB_Madd/";
+    public static String DbPath = DbRoot+"_DB_Madd.json";
 
-	private Vector<JavEntry> jDataList;
-	private JSONArray jTotalData;
+	private static Vector<JavEntry> jDataList;
+	private static JSONArray jTotalData;
 
 	public MaddawParser() {
 		try {
 			init();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
+		} catch (IOException |ParseException e) {
 			e.printStackTrace();
 		}
 	}
 
-	private void init() throws IOException, ParseException {
+	public static void init() throws IOException, ParseException {
 		jTotalData = new JSONArray();
 		jDataList = new Vector<JavEntry>();
 		
@@ -118,9 +114,9 @@ public class MaddawParser {
 						//System.out.println(tmpV.link);
 					
 						Document subDoc = Jsoup.connect(tmpV.link).userAgent("Mozilla").get();
-						tmpV.imgSrc = getImage(subDoc);
-						tmpV.dllink = getDLink(subDoc, tmpV.id);
-						tmpV.date = getDate(subDoc);
+						tmpV.imgSrc = getAttrImage(subDoc);
+						tmpV.dllink = getAttrDLink(subDoc, tmpV.id);
+						tmpV.date = getAttrDate(subDoc);
 						tmpV.imgPath = DbRoot+tmpV.id+".jpg";						
 						saveImage(tmpV.imgSrc, tmpV.imgPath);
 						// Final
@@ -180,7 +176,7 @@ public class MaddawParser {
 		return jObj;
 	}
 	
-	public JavEntry transJsonData(JSONObject jObj) {
+	public static JavEntry transJsonData(JSONObject jObj) {
 		
 		if (jObj==null){
 			System.out.println("Null jObj");
@@ -208,26 +204,26 @@ public class MaddawParser {
 		for (Object castName :jArrayCast) {
 			tmpArrayCast.add((String)castName);
 		}
-		avObj.cast = new ArrayList<String>(tmpArrayCast);
+		avObj.cast = new Vector<String>(tmpArrayCast);
 		
 		ArrayList<String> tmpArrayGenre = new ArrayList<String>();
 		JSONArray jArrayGenre = (JSONArray)jObj.get("genre");
 		for (Object genreName :jArrayGenre) {
 			tmpArrayGenre.add((String)genreName);
 		}
-		avObj.genre = new ArrayList<String>(tmpArrayGenre);
+		avObj.genre = new Vector<String>(tmpArrayGenre);
 		
 		ArrayList<String> tmpArrayDllink = new ArrayList<String>();
 		JSONArray jArrayDllink = (JSONArray)jObj.get("dllink");
 		for (Object dllink :jArrayDllink) {
 			tmpArrayDllink.add((String)dllink);
 		}
-		avObj.dllink = new ArrayList<String>(tmpArrayDllink);
+		avObj.dllink = new Vector<String>(tmpArrayDllink);
 
 		return avObj;
 	}
 	
-	public String getImage(Document doc) throws IOException {
+	public static String getAttrImage(Document doc) throws IOException {
 		String imgSrc = null;
 		Elements contents = doc.getElementsByClass("alignnone");
 		imgSrc = contents.get(0).attr("src").toString();
@@ -235,7 +231,7 @@ public class MaddawParser {
 		return imgSrc;
 	}
 	
-	public Vector<String> getDLink(Document doc, String EntryId) throws IOException {
+	public static Vector<String> getAttrDLink(Document doc, String EntryId) throws IOException {
 		Vector<String> dlink = new Vector<String>();
 		Element contentMain = doc.getElementById(EntryId);
 		Elements contents = contentMain.getElementsByTag("a");
@@ -249,7 +245,7 @@ public class MaddawParser {
 		return dlink;
 	}
 	
-	public String getDate(Document doc) throws IOException {
+	public static String getAttrDate(Document doc) throws IOException {
 		Element content = doc.getElementsByClass("post-info-date").first();
 		String dateInfo = content.html();
 		int month = 1;
@@ -310,6 +306,14 @@ public class MaddawParser {
 		//System.out.println("getDate="+sRet);
 
 		return sRet;
+	}
+	
+	public static int length() {
+		return jDataList.size();
+	}
+	
+	public static JavEntry get(int idx) {
+		return jDataList.get(idx);
 	}
 
 	public static void saveImage(String imageUrl, String destinationFile)

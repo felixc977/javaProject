@@ -1,7 +1,6 @@
 package javparser;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Vector;
 
 public class JavEntry
 {
@@ -15,15 +14,15 @@ public class JavEntry
 	public String label;
 	public String maker;
 	public Integer length;
-	public List<String> cast;
-	public List<String> genre;
-	public List<String> dllink;
+	public Vector<String> cast;
+	public Vector<String> genre;
+	public Vector<String> dllink;
 	
 	JavEntry()
 	{
-		this.cast = new ArrayList<String>();
-		this.genre = new ArrayList<String>();
-		this.dllink = new ArrayList<String>();
+		this.cast = new Vector<String>();
+		this.genre = new Vector<String>();
+		this.dllink = new Vector<String>();
 	}
 	
 	public void Clone(JavEntry inAvEntry)
@@ -38,8 +37,8 @@ public class JavEntry
 		label = inAvEntry.label;
 		maker = inAvEntry.maker;
 		length = inAvEntry.length;
-		this.cast = new ArrayList<String>(inAvEntry.cast);
-		this.genre = new ArrayList<String>(inAvEntry.genre);
-		this.dllink = new ArrayList<String>(inAvEntry.dllink);
+		this.cast = new Vector<String>(inAvEntry.cast);
+		this.genre = new Vector<String>(inAvEntry.genre);
+		this.dllink = new Vector<String>(inAvEntry.dllink);
 	}
 }

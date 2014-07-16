@@ -6,7 +6,7 @@ import javparser.MaddawParser;
 
 public class GraberMain {
 	private static MaddawParser gGraber;
-
+/*
 	public static void main(String[] args) {
 		gGraber = new MaddawParser();
 
@@ -18,5 +18,5 @@ public class GraberMain {
 			e.printStackTrace();
 		}
 	}
-
+*/
 }
