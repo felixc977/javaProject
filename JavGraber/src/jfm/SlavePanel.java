@@ -13,7 +13,6 @@ import javax.swing.JPanel;
 import javax.swing.JTable;
 
 import javparser.JavEntry;
-import javparser.MaddawParser;
 
 public class SlavePanel extends JPanel {
 	private static final long serialVersionUID = 1L;
@@ -52,40 +51,33 @@ public class SlavePanel extends JPanel {
 		init();
 	}
 
-	public void setInfo(int javId) {
+	public void setInfo(JavEntry avEntry) {
 		try {
-			if (javId<=MaddawParser.length()) {
-				JavEntry avEntry = null;
-				avEntry = MaddawParser.get(javId);
-				if (avEntry == null) {
-					return;
-				}				
+			if (avEntry == null) {
+				return;
+			}				
 
-				/* set table */
-				String tmpStr = "";
-				tableInfo[TableEntry.title.getValue()][1] = avEntry.title;
-				tableInfo[TableEntry.id.getValue()][1] = avEntry.id;
-				tableInfo[TableEntry.date.getValue()][1] = avEntry.date;
-				
-				tmpStr = "";
-				for(String subStr: avEntry.genre) {
-					tmpStr = tmpStr+subStr+" ";
-				}
-				tableInfo[TableEntry.genre.getValue()][1] = tmpStr;
-				
-				tmpStr = "";
-				for(String subStr: avEntry.cast) {
-					tmpStr = tmpStr+subStr+" ";
-				}
-				tableInfo[TableEntry.cast.getValue()][1] = tmpStr;
-				
-				/* set image */
-				imgPath = avEntry.imgPath;
-				changeImage();
-			} else {
-				System.out.println("setInfo: ParseResult.NotExist\n");
-				setToNullState();
+			/* set table */
+			String tmpStr = "";
+			tableInfo[TableEntry.title.getValue()][1] = avEntry.title;
+			tableInfo[TableEntry.id.getValue()][1] = avEntry.id;
+			tableInfo[TableEntry.date.getValue()][1] = avEntry.date;
+			
+			tmpStr = "";
+			for(String subStr: avEntry.genre) {
+				tmpStr = tmpStr+subStr+" ";
 			}
+			tableInfo[TableEntry.genre.getValue()][1] = tmpStr;
+			
+			tmpStr = "";
+			for(String subStr: avEntry.cast) {
+				tmpStr = tmpStr+subStr+" ";
+			}
+			tableInfo[TableEntry.cast.getValue()][1] = tmpStr;
+			
+			/* set image */
+			imgPath = avEntry.imgPath;
+			changeImage();
 		} catch (Exception e1) {
 			System.out.println("[Error]setInfo: Exception\n");
 		}

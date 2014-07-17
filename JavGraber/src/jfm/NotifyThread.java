@@ -1,15 +1,17 @@
 package jfm;
 
+import javparser.JavEntry;
+
 public class NotifyThread implements Runnable {
-	int gIdx;
+	JavEntry gEntry;
 	String gsUrl;
 	JfmMain targetCompo;
 	Thread t;
 
-	NotifyThread(int idx, JfmMain inPanel) {
-		gIdx = idx;
+	NotifyThread(JavEntry inEntry, JfmMain inPanel) {
+		gEntry = inEntry;
 		targetCompo = inPanel;
-		t = new Thread(this, "F"+Integer.toString(idx));
+		t = new Thread(this, "NotifyThread");
 	}
 	
 	public void start() {
@@ -17,8 +19,8 @@ public class NotifyThread implements Runnable {
 	}
 
 	public void run() {
-		targetCompo.parseAction(gIdx);
-		System.out.printf("%d close\n", gIdx);
+		targetCompo.parseAction(gEntry);
+		System.out.printf("NotifyThread close\n");
 		return;
 	}
 }

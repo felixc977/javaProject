@@ -8,6 +8,8 @@ import java.nio.file.Paths;
 
 import javax.swing.*;
 
+import javparser.JavEntry;
+
 
 class JfmMain extends JFrame
  {
@@ -66,16 +68,15 @@ class JfmMain extends JFrame
 	    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 
-	public void onEvent(int selectIdx){
+	public void onEvent(JavEntry inEntry){
 		slavePanel.setToWaitState();
-		NotifyThread t1 = new NotifyThread(selectIdx, this);
+		NotifyThread t1 = new NotifyThread(inEntry, this);
 		t1.start();
 	}
 	
-	public void parseAction(int selectIdx){
+	public void parseAction(JavEntry inEntry){
 		System.out.print("parseAction\n");
-		//slavePanel.setToWaitState();
-		slavePanel.setInfo(selectIdx);
+		slavePanel.setInfo(inEntry);
 	}
 	
 	public String getVideoPlayer() {

@@ -24,14 +24,11 @@ import javax.swing.KeyStroke;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumn;
 
-import org.json.simple.parser.ParseException;
-
-import javparser.MaddawParser;
+import javparser.JavParser;
+import javparser.JavsukiParser;
+import javparser.MaddParser;
 
 public class MasterPanel extends JPanel {
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	
 	private JfmMain parentFrame;
@@ -43,7 +40,9 @@ public class MasterPanel extends JPanel {
 	private JPanel subPanel;
 	private JButton actionButton;
 	private MasterPanel mySelf;
-	
+	private MaddParser maddParser = new MaddParser();	
+	private JavsukiParser javsukiParser = new JavsukiParser();
+	private JavParser javParser;
 	private ProcessListener pListener = new MaddProcessListener();	
 	private int selectItem;
 	public long startT;
@@ -63,13 +62,10 @@ public class MasterPanel extends JPanel {
 	}
 
 	public void init() {
-		try {
-			MaddawParser.init();
-		} catch (IOException |ParseException e1) {
-			e1.printStackTrace();
-		}
-		
 		mySelf = this;
+		
+		//javParser = maddParser;
+		javParser = javsukiParser;
 
 		subPanel = new JPanel();
 		subPanel.setLayout(new BorderLayout());
@@ -85,9 +81,8 @@ public class MasterPanel extends JPanel {
 				}catch (NumberFormatException exception) {
 					System.out.println("parse textfield failed");
 				}				
-				GetinfoThread t1=new GetinfoThread(searchDepth, mySelf, pListener);
+				GetinfoThread t1=new GetinfoThread(searchDepth, mySelf);
 				t1.start();
-				setFocus(selectItem);
 			}
 		});
 		textfield = new JTextField();
@@ -133,7 +128,7 @@ public class MasterPanel extends JPanel {
 			private static final long serialVersionUID = 1L;
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				doExecute();
+				toggleItem();
 				setFocus(selectItem);
 			}
 		});
@@ -141,7 +136,7 @@ public class MasterPanel extends JPanel {
 			private static final long serialVersionUID = 1L;
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				doFinish();
+				getResult();
 			}
 		});
 
@@ -176,7 +171,7 @@ public class MasterPanel extends JPanel {
 		    @Override
 		    public void mouseClicked(MouseEvent e){
 		        if(e.getClickCount()==2){
-		        	doExecute();
+		        	toggleItem();
 		        }
 		    }
 		};
@@ -189,8 +184,8 @@ public class MasterPanel extends JPanel {
 		table.requestFocus();
 	}
 
-	private void doExecute() {
-		if (selectItem>MaddawParser.length())
+	private void toggleItem() {
+		if (selectItem>javParser.length())
 		{
 			System.out.println("[Error]out of range");
 			return;
@@ -201,11 +196,11 @@ public class MasterPanel extends JPanel {
 		model.fireTableDataChanged();
 	}
 	
-	private void doFinish() {
+	private void getResult() {
 		String finalString="";
 		for(int i=0; i<model.getRowCount(); i++) {
 			if (model.getCheckAt(i)) {
-				Vector<String> vDllink = MaddawParser.get(i).dllink;
+				Vector<String> vDllink = javParser.get(i).dllink;
 				for (int j=0;j<vDllink.size();j++) {
 					finalString = finalString+vDllink.get(j)+"\n";
 				}				
@@ -218,16 +213,28 @@ public class MasterPanel extends JPanel {
 		clpbrd.setContents(stringSelection, null);
 	}
 
+	public void doGrabAction(int inDepth) {
+		try {
+			javParser.setListener(pListener);
+			javParser.doAction(inDepth);
+			javParser.close();
+		} catch (IOException e) {
+			System.out.println("[Error]doGrabAction");
+		}
+		setPath();
+		setFocus(selectItem);
+	}
+	
 	public void setPath() {
 		/*clear all*/
 		model.clearAllRow();
 
 		/*Insert new row*/
 		Vector<Object> vcTemp = new Vector<>();
-		for (int i = 0; i <MaddawParser.length() ; i++) {
+		for (int i = 0; i <javParser.length() ; i++) {
 			vcTemp = new Vector<Object>();
-			String jDate = MaddawParser.get(i).date;
-			String jTitle = MaddawParser.get(i).title;
+			String jDate = javParser.get(i).date;
+			String jTitle = javParser.get(i).title;
 			vcTemp.add(Boolean.FALSE);
 			vcTemp.add(jDate);
 			vcTemp.add(jTitle);			
@@ -258,7 +265,7 @@ public class MasterPanel extends JPanel {
 	public void onEvent(int idx) {
 		System.out.printf("onEvent, idx=%d\n", idx);
 		selectItem = idx;
-		parentFrame.onEvent(idx);
+		parentFrame.onEvent(javParser.get(selectItem));
 	}
 	
 	public class MaddProcessListener extends ProcessListener {

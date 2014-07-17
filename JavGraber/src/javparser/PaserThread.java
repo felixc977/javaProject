@@ -2,10 +2,12 @@ package javparser;
 
 public class PaserThread implements Runnable {
 	private String Name;
+	private JavParser parser;
 	public Thread t;
 
-	PaserThread(String inName) {
+	PaserThread(String inName, JavParser inParser) {
 		Name = inName;
+		parser = inParser;
 		t = new Thread(this, Name);
 	}
 	
@@ -15,7 +17,7 @@ public class PaserThread implements Runnable {
 
 	public void run() {
 		while (true) {
-			if (MaddawParser.parseSubPage()) {
+			if (parser.parseSubPage()) {
 				;
 			}else {
 				try {
