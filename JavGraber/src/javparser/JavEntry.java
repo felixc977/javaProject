@@ -24,6 +24,11 @@ public class JavEntry
 		this.genre = new Vector<String>();
 		this.dllink = new Vector<String>();
 	}
+
+	JavEntry(JavEntry inEntry)
+	{
+		Clone(inEntry);
+	}
 	
 	public void Clone(JavEntry inAvEntry)
 	{

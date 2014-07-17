@@ -44,6 +44,7 @@ public class MasterPanel extends JPanel {
 	private JButton actionButton;
 	private MasterPanel mySelf;
 	
+	private ProcessListener pListener = new MaddProcessListener();	
 	private int selectItem;
 	public long startT;
 	
@@ -77,7 +78,14 @@ public class MasterPanel extends JPanel {
 		subPanel.add(actionButton, BorderLayout.EAST);
 		actionButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				GetinfoThread t1=new GetinfoThread(selectItem, mySelf);
+				String inputText = textfield.getText();
+				int searchDepth = 10;
+				try {
+					searchDepth = Integer.parseInt(inputText);
+				}catch (NumberFormatException exception) {
+					System.out.println("parse textfield failed");
+				}				
+				GetinfoThread t1=new GetinfoThread(searchDepth, mySelf, pListener);
 				t1.start();
 				setFocus(selectItem);
 			}
@@ -90,17 +98,6 @@ public class MasterPanel extends JPanel {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("FUCK Enter "+textfield.getText());
-//				String tmpDirName = textfield.getText();
-//				File tmpDir = new File(tmpDirName);
-//				if (tmpDir.isDirectory()) {
-//					selectItem = tmpDir;
-//					setPath(selectItem.getAbsolutePath());
-//					DefaultTableModel tableModel = (DefaultTableModel) table.getModel();
-//					tableModel.fireTableDataChanged();
-//					table.requestFocusInWindow();
-//				}else{
-//					textfield.setText(selectItem.getAbsolutePath());
-//				}
 			}
 		});
 
@@ -262,5 +259,12 @@ public class MasterPanel extends JPanel {
 		System.out.printf("onEvent, idx=%d\n", idx);
 		selectItem = idx;
 		parentFrame.onEvent(idx);
+	}
+	
+	public class MaddProcessListener extends ProcessListener {
+		@Override
+		public void onEvent(int p1, int p2) {
+			textfield.setText(String.format("Progress: %d tasks remained", p1));
+		}
 	}
 }

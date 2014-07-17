@@ -14,8 +14,12 @@ import java.io.StringWriter;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Vector;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import jfm.ProcessListener;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -33,6 +37,12 @@ public class MaddawParser {
 
 	private static Vector<JavEntry> jDataList;
 	private static JSONArray jTotalData;
+	private static Vector<JavEntry> QueueA;
+	private final static Lock _mutex = new ReentrantLock(true);
+	private static PaserThread tb1 = new PaserThread("tb1");
+	private static PaserThread tb2 = new PaserThread("tb2");
+	private static PaserThread tb3 = new PaserThread("tb3");
+	private static ProcessListener pListener = null;
 
 	public MaddawParser() {
 		try {
@@ -42,9 +52,14 @@ public class MaddawParser {
 		}
 	}
 
+	public static void setListener(ProcessListener inListener) {
+		pListener = inListener;
+	}
+	
 	public static void init() throws IOException, ParseException {
 		jTotalData = new JSONArray();
 		jDataList = new Vector<JavEntry>();
+		QueueA = new Vector<JavEntry>();
 		
 		File fileJav = new File(DbRoot);
 		if (fileJav.exists()) {
@@ -72,6 +87,32 @@ public class MaddawParser {
 		}
 	}
 	
+	public static void wakeupThreadB() {
+		System.out.println("wakeupThreadB");
+		if (!tb1.t.isAlive()) {
+			tb1.start();
+		}
+		if (!tb2.t.isAlive()) {
+			tb2.start();
+		}
+		if (!tb3.t.isAlive()) {
+			tb3.start();
+		}
+	}
+	
+	public static void killThreadB() {
+		System.out.println("killThreadB");
+		if (tb1.t.isAlive()) {
+			tb1.t.interrupt();
+		}
+		if (tb2.t.isAlive()) {
+			tb2.t.interrupt();
+		}
+		if (tb3.t.isAlive()) {
+			tb3.t.interrupt();
+		}
+	}
+	
 	public static boolean checkIfExist(String inId) {
 		boolean bHit=false;
 		for (int i = 0; i < jDataList.size(); i++) {
@@ -85,7 +126,6 @@ public class MaddawParser {
 		return bHit;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public static void doAction(int actDepth) throws IOException {
 		for (int i=1;i<=actDepth;i++) {
 			String inUrl = String.format("%s%d", strGetIdUrl, i);
@@ -109,30 +149,73 @@ public class MaddawParser {
 						}
 						
 						tmpV.title=(link.html());
-						//System.out.println("title: "+tmpV.title);
 						tmpV.link =(link.attr("href").toString());
-						//System.out.println(tmpV.link);
-					
-						Document subDoc = Jsoup.connect(tmpV.link).userAgent("Mozilla").get();
-						tmpV.imgSrc = getAttrImage(subDoc);
-						tmpV.dllink = getAttrDLink(subDoc, tmpV.id);
-						tmpV.date = getAttrDate(subDoc);
-						tmpV.imgPath = DbRoot+tmpV.id+".jpg";
-						try {
-							saveImage(tmpV.imgSrc, tmpV.imgPath);
-						} catch (IOException e) {
-							System.out.println("[Error] saveImage");
-							tmpV.imgPath = "";
-						}
 						
-						// Final
-						jDataList.add(tmpV);
-						JSONObject jObj = transData(jDataList.lastElement());
-						jTotalData.add(jObj);
+						QueueA.add(tmpV);
+						wakeupThreadB();
 					}
 				}
 			}
-		}		
+		}
+		
+		while (true) {
+			if (QueueA.size()==0) {
+				break;
+			}else {
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
+	public static JavEntry getNextJob () {
+		if (QueueA.size()>0) {
+			if (pListener!=null){
+				pListener.onEvent(QueueA.size()-1, 0);
+			}
+			return QueueA.remove(0);
+		}
+		return null;
+	}
+	
+	public static void setNextJob (JavEntry inEntry) {
+		QueueA.add(inEntry);
+		if (pListener!=null){
+			pListener.onEvent(QueueA.size(), 0);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public static boolean parseSubPage() {
+		_mutex.lock();
+		JavEntry tmpV = getNextJob();
+		_mutex.unlock();
+
+		if (tmpV==null) {
+			return false;
+		}
+		try {
+			Document subDoc = Jsoup.connect(tmpV.link).userAgent("Mozilla").get();
+			tmpV.imgSrc = getAttrImage(subDoc);
+			tmpV.dllink = getAttrDLink(subDoc, tmpV.id);
+			tmpV.cast = getAttrCast(subDoc);
+			tmpV.date = getAttrDate(subDoc);
+			tmpV.imgPath = DbRoot+tmpV.id+".jpg";
+			saveImage(tmpV.imgSrc, tmpV.imgPath);
+		} catch (IOException e1) {
+			System.out.println("[Error] saveImage");
+			tmpV.imgPath = "";
+		}
+		// Final
+		_mutex.lock();
+		jDataList.add(tmpV);
+		JSONObject jObj = transData(jDataList.lastElement());
+		jTotalData.add(jObj);
+		_mutex.unlock();
+		return true;
 	}
 	
 	public static void close() throws IOException {
@@ -145,6 +228,8 @@ public class MaddawParser {
 		BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
 		bufferedWriter.write(jsonText2);
 		bufferedWriter.close();
+		
+		killThreadB();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -249,6 +334,32 @@ public class MaddawParser {
 		}
 
 		return dlink;
+	}
+	
+	public static Vector<String> getAttrCast(Document doc) throws IOException {
+		Vector<String> vCast = new Vector<String>();
+		Elements contents = doc.getElementsByTag("meta");
+		for (Element content : contents) {
+			if (content.attr("name").contains("keywords")) {
+				String innerContent = content.attr("content").toString();
+				String[] innerContentList = innerContent.split("[,\\s]+");
+				for (int i=0;i<innerContentList.length;i++) {
+					boolean bHit = false;
+					//System.out.println(i+":"+innerContentList[i]);
+					for (int j=0;j<vCast.size();j++) {
+						if (vCast.get(j).contains(innerContentList[i])) {
+							bHit = true;
+							break;
+						}
+					}
+					if (bHit==false) {
+						vCast.add(innerContentList[i]);
+					}
+				}				
+				break;
+			}			
+		}
+		return vCast;
 	}
 	
 	public static String getAttrDate(Document doc) throws IOException {

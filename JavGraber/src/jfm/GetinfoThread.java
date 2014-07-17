@@ -11,11 +11,13 @@ public class GetinfoThread implements Runnable {
 	int gIdx;
 	String gsUrl;
 	MasterPanel parentCompo;
+	ProcessListener pListener;
 	Thread t;
 
-	GetinfoThread(int idx, MasterPanel inPanel) {
+	GetinfoThread(int idx, MasterPanel inPanel, ProcessListener inListener) {
 		gIdx = idx;
 		parentCompo = inPanel;
+		pListener = inListener;
 		t = new Thread(this, "F"+Integer.toString(idx));
 	}
 	
@@ -27,8 +29,9 @@ public class GetinfoThread implements Runnable {
 		do {
 			System.out.printf("%d gogo\n", gIdx);
 			try {
+				MaddawParser.setListener(pListener);
 				MaddawParser.init();
-				MaddawParser.doAction(1);
+				MaddawParser.doAction(gIdx);
 				MaddawParser.close();
 			} catch (IOException | ParseException e) {
 				e.printStackTrace();
