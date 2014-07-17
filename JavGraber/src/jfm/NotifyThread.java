@@ -20,7 +20,7 @@ public class NotifyThread implements Runnable {
 
 	public void run() {
 		targetCompo.parseAction(gEntry);
-		System.out.printf("NotifyThread close\n");
+		//System.out.printf("NotifyThread close\n");
 		return;
 	}
 }

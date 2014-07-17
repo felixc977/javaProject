@@ -88,8 +88,20 @@ public class JavsukiParser extends JavParser {
 		}
 
 		Document subDoc=null;
+		int RetryTimes = 5;
+		do {
+			try {
+				subDoc = Jsoup.connect(tmpV.link).userAgent("Mozilla").get();
+				if (subDoc!=null) {
+					break;
+				}
+			}catch (IOException e) {
+				RetryTimes--;
+				System.out.println("[Warn] parseSubPage:"+e.getMessage());
+				System.out.println("[Warn] reconnect:");
+			}
+		} while(RetryTimes>0);
 		try {
-			subDoc = Jsoup.connect(tmpV.link).userAgent("Mozilla").get();
 			tmpV.imgSrc = getAttrImage(subDoc);
 			tmpV.dllink = getAttrDLink(subDoc, tmpV.id);
 			tmpV.cast = getAttrCast(subDoc);
@@ -97,8 +109,7 @@ public class JavsukiParser extends JavParser {
 			tmpV.imgPath = DbRoot+tmpV.id+".jpg";
 			saveImage(tmpV.imgSrc, tmpV.imgPath);
 		} catch (IOException e) {
-			System.out.println("[Error] "+e.getMessage());
-			tmpV.imgPath = "";
+			System.out.println("[Error] parseSubPage2:"+e.getMessage());
 		}
 
 		// Final
@@ -120,7 +131,7 @@ public class JavsukiParser extends JavParser {
 				break;
 			}			
 		}
-		System.out.println("imgsrc="+imgSrc);
+		//System.out.println("imgsrc="+imgSrc);
 		return imgSrc;
 	}
 
@@ -131,7 +142,7 @@ public class JavsukiParser extends JavParser {
 		Elements contents = doc.getElementsByTag("a");
 		for (Element content : contents) {
 			if (content.attr("href").contains("http://rapidgator.net/file/")) {
-				System.out.println("dllink="+content.attr("href").toString());
+				//System.out.println("dllink="+content.attr("href").toString());
 				dlink.add(content.attr("href").toString());
 			}				
 		}
@@ -148,8 +159,21 @@ public class JavsukiParser extends JavParser {
 			Pattern tmpPatt = Pattern.compile("出演者：[\\s]+([^<]+)");
 			Matcher matcher = tmpPatt.matcher(tmpStr);
 			if (matcher.find()) {
-				System.out.println(matcher.group(0));
-				vCast.add(matcher.group(0));
+				String innerContent = matcher.group(1);
+				String[] innerContentList = innerContent.split("[（）、\\s]+");
+				for (int i=0;i<innerContentList.length;i++) {
+					boolean bHit = false;
+					//System.out.println(i+":"+innerContentList[i]);
+					for (int j=0;j<vCast.size();j++) {
+						if (vCast.get(j).contains(innerContentList[i])) {
+							bHit = true;
+							break;
+						}
+					}
+					if (bHit==false) {
+						vCast.add(innerContentList[i]);
+					}
+				}
 				break;
 			}
 		}
@@ -222,7 +246,7 @@ public class JavsukiParser extends JavParser {
 			}
 		}
 		String sRet = String.format("%04d%02d%02d", year, month, day);
-		System.out.println(sRet);
+		//System.out.println(sRet);
 		return sRet;
 	}
 }

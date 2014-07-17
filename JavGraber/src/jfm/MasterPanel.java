@@ -8,6 +8,7 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -42,10 +43,12 @@ public class MasterPanel extends JPanel {
 	private MasterPanel mySelf;
 	private MaddParser maddParser = new MaddParser();	
 	private JavsukiParser javsukiParser = new JavsukiParser();
-	private JavParser javParser;
+	private JavParser javParser = javsukiParser;
 	private ProcessListener pListener = new MaddProcessListener();	
 	private int selectItem;
 	public long startT;
+
+	private int gSwitch = 0;
 	
 	MasterPanel(String inPath, JfmMain inFrame) {
 		startT = System.currentTimeMillis();
@@ -64,8 +67,11 @@ public class MasterPanel extends JPanel {
 	public void init() {
 		mySelf = this;
 		
-		//javParser = maddParser;
-		javParser = javsukiParser;
+		if ((gSwitch %2)==1) {
+			javParser = maddParser;
+		} else {
+			javParser = javsukiParser;
+		}
 
 		subPanel = new JPanel();
 		subPanel.setLayout(new BorderLayout());
@@ -93,6 +99,23 @@ public class MasterPanel extends JPanel {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("FUCK Enter "+textfield.getText());
+			}
+		});
+		textfield.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_S, 
+				InputEvent.CTRL_DOWN_MASK), "key_switch");
+		textfield.getActionMap().put("key_switch", new AbstractAction() {
+			private static final long serialVersionUID = 1L;
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				gSwitch++;
+				if ((gSwitch %2)==1) {
+					javParser = maddParser;
+					mySelf.textfield.setText(maddParser.parserName);
+				} else {
+					javParser = javsukiParser;
+					mySelf.textfield.setText(javsukiParser.parserName);
+				}
+				mySelf.setPath();
 			}
 		});
 

@@ -102,7 +102,7 @@ public class SlavePanel extends JPanel {
 	}
 	
 	public void setToWaitState() {
-		System.out.printf("setToWaitState()\n");
+		//System.out.printf("setToWaitState()\n");
 		String tmpStr = "Loading";
 		tableInfo[TableEntry.title.getValue()][1] = tmpStr;
 		tableInfo[TableEntry.id.getValue()][1] = tmpStr;
@@ -114,7 +114,7 @@ public class SlavePanel extends JPanel {
 	}
 	
 	public void setToNullState() {
-		System.out.printf("setToWaitState()\n");
+		//System.out.printf("setToWaitState()\n");
 		String tmpStr = "NULL";
 		tableInfo[TableEntry.title.getValue()][1] = tmpStr;
 		tableInfo[TableEntry.id.getValue()][1] = tmpStr;
@@ -129,7 +129,7 @@ public class SlavePanel extends JPanel {
 	public void changeImage() {
 		String path = imgPath;
 		if (path != null) {
-			System.out.println("change Image: " + path);
+			//System.out.println("change Image: " + path);
 		} else {
 			path = "./img/directory_01.jpg";
 		}

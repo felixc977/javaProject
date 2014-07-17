@@ -32,7 +32,7 @@ public abstract class JavParser {
 	protected Vector<JavEntry> QueueA;
 	protected PaserThread tb1 = new PaserThread("tb1", this);
 	protected PaserThread tb2 = new PaserThread("tb2", this);
-	protected PaserThread tb3 = new PaserThread("tb3", this);
+	//protected PaserThread tb3 = new PaserThread("tb3", this);
 	protected ProcessListener pListener = null;
 
 	/*Abstract Functions*/
@@ -78,6 +78,14 @@ public abstract class JavParser {
 		}
 	}
 	
+	public boolean ThreadBisWait() {
+//		if (tb1.isWait() && tb2.isWait() && tb3.isWait()) {
+		if (tb1.isWait() && tb2.isWait()) {
+			return true;
+		}
+		return false;
+	}
+
 	public void wakeupThreadB() {
 		//System.out.println("wakeupThreadB");
 		if (!tb1.t.isAlive()) {
@@ -86,9 +94,9 @@ public abstract class JavParser {
 		if (!tb2.t.isAlive()) {
 			tb2.start();
 		}
-		if (!tb3.t.isAlive()) {
-			tb3.start();
-		}
+//		if (!tb3.t.isAlive()) {
+//			tb3.start();
+//		}
 	}
 	
 	public void killThreadB() {
@@ -99,9 +107,9 @@ public abstract class JavParser {
 		if (tb2.t.isAlive()) {
 			tb2.t.interrupt();
 		}
-		if (tb3.t.isAlive()) {
-			tb3.t.interrupt();
-		}
+//		if (tb3.t.isAlive()) {
+//			tb3.t.interrupt();
+//		}
 	}
 	
 	public boolean checkIfExist(String inId) {
@@ -121,7 +129,7 @@ public abstract class JavParser {
 		parseAction(actDepth);
 		
 		while (true) {
-			if (QueueA.size()==0) {
+			if ((QueueA.size()==0) && ThreadBisWait()) {
 				break;
 			}else {
 				try {
