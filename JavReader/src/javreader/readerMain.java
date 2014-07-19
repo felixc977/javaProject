@@ -1,4 +1,4 @@
-package dirReader;
+package javreader;
 
 public class readerMain {
 	static DirReader dReader;

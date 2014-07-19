@@ -1,4 +1,4 @@
-package dirReader;
+package javreader;
 
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
