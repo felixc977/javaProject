@@ -102,6 +102,7 @@ public class JavsukiParser extends JavParser {
 			}
 		} while(RetryTimes>0);
 		try {
+			getAttrRealId(tmpV.title);
 			tmpV.imgSrc = getAttrImage(subDoc);
 			tmpV.dllink = getAttrDLink(subDoc, tmpV.id);
 			tmpV.cast = getAttrCast(subDoc);
@@ -133,6 +134,13 @@ public class JavsukiParser extends JavParser {
 		}
 		//System.out.println("imgsrc="+imgSrc);
 		return imgSrc;
+	}
+	
+	@Override
+	public String getAttrRealId(String inTitle) throws IOException {
+		String realId = JavIdInducer.transId(inTitle);
+		System.out.println("realID:"+realId);
+		return realId;
 	}
 
 	@Override

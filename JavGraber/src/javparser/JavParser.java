@@ -42,6 +42,7 @@ public abstract class JavParser {
 	public abstract Vector<String> getAttrDLink(Document doc, String EntryId) throws IOException;
 	public abstract Vector<String> getAttrCast(Document doc) throws IOException;
 	public abstract String getAttrDate(Document doc) throws IOException;
+	public abstract String getAttrRealId(String inStr) throws IOException;
 
 	public void setListener(ProcessListener inListener) {
 		pListener = inListener;

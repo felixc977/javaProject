@@ -82,6 +82,7 @@ public class MaddParser extends JavParser {
 		Document subDoc=null;
 		try {
 			subDoc = Jsoup.connect(tmpV.link).userAgent("Mozilla").get();
+			getAttrRealId(tmpV.title);
 			tmpV.imgSrc = getAttrImage(subDoc);
 			tmpV.dllink = getAttrDLink(subDoc, tmpV.id);
 			tmpV.cast = getAttrCast(subDoc);
@@ -109,6 +110,13 @@ public class MaddParser extends JavParser {
 		imgSrc = contents.get(0).attr("src").toString();
 		//System.out.println("imgsrc="+imgSrc);
 		return imgSrc;
+	}
+	
+	@Override
+	public String getAttrRealId(String inTitle) throws IOException {
+		String realId = JavIdInducer.transId(inTitle);
+		System.out.println("realID:"+realId);
+		return realId;
 	}
 
 	@Override
