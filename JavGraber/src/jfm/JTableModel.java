@@ -62,6 +62,6 @@ class JTableModel extends AbstractTableModel {
 	}
 
 	public boolean isCellEditable(int row, int column) {
-		return (column == 0);
+		return true;//(column == 0);
 	}
 }

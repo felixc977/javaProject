@@ -26,8 +26,9 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumn;
 
 import javparser.JavParser;
-import javparser.JavsukiParser;
-import javparser.MaddParser;
+import javparser._91JavParser;
+import javparser._JavsukiParser;
+import javparser._MaddParser;
 
 public class MasterPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
@@ -41,9 +42,10 @@ public class MasterPanel extends JPanel {
 	private JPanel subPanel;
 	private JButton actionButton;
 	private MasterPanel mySelf;
-	private MaddParser maddParser = new MaddParser();	
-	private JavsukiParser javsukiParser = new JavsukiParser();
-	private JavParser javParser = javsukiParser;
+	private _MaddParser maddParser = new _MaddParser();	
+	private _JavsukiParser javsukiParser = new _JavsukiParser();
+	private _91JavParser _91javParser = new _91JavParser();
+	private JavParser javParser = javsukiParser;	
 	private ProcessListener pListener = new MaddProcessListener();	
 	private int selectItem;
 	public long startT;
@@ -108,12 +110,15 @@ public class MasterPanel extends JPanel {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				gSwitch++;
-				if ((gSwitch %2)==1) {
+				if ((gSwitch %3)==2) {
 					javParser = maddParser;
 					mySelf.textfield.setText(maddParser.parserName);
-				} else {
+				} else if ((gSwitch %3)==1){
 					javParser = javsukiParser;
 					mySelf.textfield.setText(javsukiParser.parserName);
+				} else {
+					javParser = _91javParser;
+					mySelf.textfield.setText(_91javParser.parserName);
 				}
 				mySelf.setPath();
 			}
@@ -256,7 +261,7 @@ public class MasterPanel extends JPanel {
 		Vector<Object> vcTemp = new Vector<>();
 		for (int i = 0; i <javParser.length() ; i++) {
 			vcTemp = new Vector<Object>();
-			String jDate = javParser.get(i).date;
+			String jDate = javParser.get(i).label;
 			String jTitle = javParser.get(i).title;
 			vcTemp.add(Boolean.FALSE);
 			vcTemp.add(jDate);
