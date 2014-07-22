@@ -26,13 +26,14 @@ import org.jsoup.nodes.Document;
 public abstract class JavParser {
 	public String DbRoot = "./_DB_Default/";
     public String DbJsonPath = null;
+    public String Name = "DefaultParser";
 
     protected Vector<JavEntry> jDataList;
     protected JSONArray jTotalData;
 	protected Vector<JavEntry> QueueA;
 	protected PaserThread tb1 = new PaserThread("tb1", this);
 	protected PaserThread tb2 = new PaserThread("tb2", this);
-	//protected PaserThread tb3 = new PaserThread("tb3", this);
+	protected PaserThread tb3 = new PaserThread("tb3", this);
 	protected ProcessListener pListener = null;
 
 	/*Abstract Functions*/
@@ -42,13 +43,27 @@ public abstract class JavParser {
 	public abstract Vector<String> getAttrDLink(Document doc, String EntryId) throws IOException;
 	public abstract Vector<String> getAttrCast(Document doc) throws IOException;
 	public abstract String getAttrDate(Document doc) throws IOException;
-	public abstract String getAttrRealId(String inStr) throws IOException;
-
+	
+	public String getAttrRealId(String inStr) throws IOException {
+		String realId = JavIdInducer.transId(inStr);
+		//System.out.println("realID:"+realId);
+		return realId;
+	}
+	
+	public void setName(String inName) {
+		Name = new String(inName);
+	}
+	
+	public String getName() {
+		return Name;
+	}
+	
 	public void setListener(ProcessListener inListener) {
 		pListener = inListener;
 	}
 	
 	public void init(String inName) throws IOException, ParseException {
+		setName(inName);
 		DbRoot = String.format("./_DB_%s/", inName);
 		DbJsonPath = String.format("%s_DB_%s.json", DbRoot,inName);
 		
@@ -80,8 +95,8 @@ public abstract class JavParser {
 	}
 	
 	public boolean ThreadBisWait() {
-//		if (tb1.isWait() && tb2.isWait() && tb3.isWait()) {
-		if (tb1.isWait() && tb2.isWait()) {
+		if (tb1.isWait() && tb2.isWait() && tb3.isWait()) {
+//		if (tb1.isWait() && tb2.isWait()) {
 			return true;
 		}
 		return false;
@@ -95,9 +110,9 @@ public abstract class JavParser {
 		if (!tb2.t.isAlive()) {
 			tb2.start();
 		}
-//		if (!tb3.t.isAlive()) {
-//			tb3.start();
-//		}
+		if (!tb3.t.isAlive()) {
+			tb3.start();
+		}
 	}
 	
 	public void killThreadB() {
@@ -108,9 +123,9 @@ public abstract class JavParser {
 		if (tb2.t.isAlive()) {
 			tb2.t.interrupt();
 		}
-//		if (tb3.t.isAlive()) {
-//			tb3.t.interrupt();
-//		}
+		if (tb3.t.isAlive()) {
+			tb3.t.interrupt();
+		}
 	}
 	
 	public boolean checkIfExist(String inId) {
@@ -260,7 +275,11 @@ public abstract class JavParser {
 	}
 	
 	public JavEntry get(int idx) {
-		return jDataList.get(idx);
+		JavEntry retEntry = new JavEntry();
+		if ((jDataList!=null)&&(length()!=0)) {
+			retEntry =  jDataList.get(idx);
+		}
+		return retEntry;
 	}
 
 	public static void saveImage(String imageUrl, String destinationFile) throws IOException {

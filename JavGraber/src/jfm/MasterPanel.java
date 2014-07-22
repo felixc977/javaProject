@@ -35,7 +35,6 @@ public class MasterPanel extends JPanel {
 	
 	private JfmMain parentFrame;
 	private JTable table;
-	//private DefaultTableModel model;
 	private JTableModel model;
 	private JScrollPane scrollPane;
 	private JTextField textfield;
@@ -68,13 +67,6 @@ public class MasterPanel extends JPanel {
 
 	public void init() {
 		mySelf = this;
-		
-		if ((gSwitch %2)==1) {
-			javParser = maddParser;
-		} else {
-			javParser = javsukiParser;
-		}
-
 		subPanel = new JPanel();
 		subPanel.setLayout(new BorderLayout());
 		this.add(subPanel, BorderLayout.NORTH);
@@ -109,18 +101,16 @@ public class MasterPanel extends JPanel {
 			private static final long serialVersionUID = 1L;
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				gSwitch++;
-				if ((gSwitch %3)==2) {
-					javParser = maddParser;
-					mySelf.textfield.setText(maddParser.parserName);
-				} else if ((gSwitch %3)==1){
-					javParser = javsukiParser;
-					mySelf.textfield.setText(javsukiParser.parserName);
-				} else {
-					javParser = _91javParser;
-					mySelf.textfield.setText(_91javParser.parserName);
-				}
-				mySelf.setPath();
+				switchProvider();
+			}
+		});
+		textfield.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_R, 
+				java.awt.event.InputEvent.CTRL_DOWN_MASK), "key_ctrl_r");
+		textfield.getActionMap().put("key_ctrl_r", new AbstractAction() {
+			private static final long serialVersionUID = 1L;
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				setFocusInList(selectItem);
 			}
 		});
 
@@ -128,7 +118,9 @@ public class MasterPanel extends JPanel {
 		model = new JTableModel();
 		table = new JTable(model);
 		getDiffTime("PartA");
-		setPath();
+
+		/**/
+		switchProvider();
 
 		// Add the table to a scrolling pane
 		table.setDefaultRenderer(Object.class,new ColorTable());
@@ -157,7 +149,7 @@ public class MasterPanel extends JPanel {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				toggleItem();
-				setFocus(selectItem);
+				setFocusInList(selectItem);
 			}
 		});
 		table.getActionMap().put("key_enter", new AbstractAction() {
@@ -167,30 +159,31 @@ public class MasterPanel extends JPanel {
 				getResult();
 			}
 		});
-
-		table.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), "key_left");
-		table.getActionMap().put("key_left", new AbstractAction() {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-//				if (dir.getParent()!=null) {
-//					textfield.setText(selectItem.getAbsolutePath());
-//					setPath(dir.getParent());
-//					DefaultTableModel tableModel = (DefaultTableModel) table.getModel();
-//					tableModel.fireTableDataChanged();
-//				}
-			}
-		});
-		
 		table.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_E, 
 				java.awt.event.InputEvent.CTRL_DOWN_MASK), "key_ctrl_e");
 		table.getActionMap().put("key_ctrl_e", new AbstractAction() {
 			private static final long serialVersionUID = 1L;
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("FUCK Combine");
-				textfield.requestFocusInWindow();
+				setFocusInTextfield();
+			}
+		});
+		table.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_S, 
+				InputEvent.CTRL_DOWN_MASK), "key_switch");
+		table.getActionMap().put("key_switch", new AbstractAction() {
+			private static final long serialVersionUID = 1L;
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				switchProvider();
+			}
+		});
+		table.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_R, 
+				java.awt.event.InputEvent.CTRL_DOWN_MASK), "key_ctrl_r");
+		table.getActionMap().put("key_ctrl_r", new AbstractAction() {
+			private static final long serialVersionUID = 1L;
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				setFocusInList(selectItem);
 			}
 		});
 		
@@ -206,10 +199,15 @@ public class MasterPanel extends JPanel {
 		table.addMouseListener(mouseListener);
 	}
 
-	private void setFocus(int idx) {
+	private void setFocusInList(int idx) {
 		table.setCellSelectionEnabled(true);
-		table.changeSelection(selectItem, 0, false, false);
+		table.changeSelection(idx, 0, false, false);
 		table.requestFocus();
+	}
+	
+	private void setFocusInTextfield() {
+		textfield.setText("");
+		textfield.requestFocus();
 	}
 
 	private void toggleItem() {
@@ -250,24 +248,34 @@ public class MasterPanel extends JPanel {
 			System.out.println("[Error]doGrabAction");
 		}
 		setPath();
-		setFocus(selectItem);
+		setFocusInList(selectItem);
 	}
 	
 	public void setPath() {
+		Vector<Object> vcTemp = new Vector<>();
+
 		/*clear all*/
 		model.clearAllRow();
 
-		/*Insert new row*/
-		Vector<Object> vcTemp = new Vector<>();
-		for (int i = 0; i <javParser.length() ; i++) {
-			vcTemp = new Vector<Object>();
-			String jDate = javParser.get(i).label;
-			String jTitle = javParser.get(i).title;
+		if (javParser.length()!=0) {
+			/*Insert new row*/
+			for (int i = 0; i <javParser.length() ; i++) {
+				vcTemp = new Vector<Object>();
+				String jDate = javParser.get(i).label;
+				String jTitle = javParser.get(i).title;
+				vcTemp.add(Boolean.FALSE);
+				vcTemp.add(jDate);
+				vcTemp.add(jTitle);			
+				model.addRow(vcTemp);
+			}
+		} else {
+			/*Insert empty row*/
 			vcTemp.add(Boolean.FALSE);
-			vcTemp.add(jDate);
-			vcTemp.add(jTitle);			
+			vcTemp.add("(Empty)");
+			vcTemp.add("(Empty)");
 			model.addRow(vcTemp);
 		}
+		
 		model.fireTableDataChanged();
 	}
 	
@@ -288,6 +296,19 @@ public class MasterPanel extends JPanel {
 			return super.getTableCellRendererComponent(table, value,
 					isSelected, hasFocus, row, col);
 		}
+	}
+	
+	public void switchProvider() {
+		gSwitch++;
+		if ((gSwitch %3)==2) {
+			javParser = maddParser;
+		} else if ((gSwitch %3)==1){
+			javParser = javsukiParser;
+		} else {
+			javParser = _91javParser;
+		}
+		textfield.setText("["+javParser.getName()+"]");
+		setPath();
 	}
 
 	public void onEvent(int idx) {

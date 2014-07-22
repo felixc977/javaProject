@@ -131,13 +131,6 @@ public class _91JavParser extends JavParser {
 	}
 	
 	@Override
-	public String getAttrRealId(String inTitle) throws IOException {
-		String realId = JavIdInducer.transId(inTitle);
-		System.out.println("realID:"+realId);
-		return realId;
-	}
-
-	@Override
 	public Vector<String> getAttrDLink(Document doc, String EntryId)
 			throws IOException {
 		Vector<String> dlink = new Vector<String>();

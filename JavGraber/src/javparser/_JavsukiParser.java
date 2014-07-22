@@ -135,13 +135,6 @@ public class _JavsukiParser extends JavParser {
 		//System.out.println("imgsrc="+imgSrc);
 		return imgSrc;
 	}
-	
-	@Override
-	public String getAttrRealId(String inTitle) throws IOException {
-		String realId = JavIdInducer.transId(inTitle);
-		System.out.println("realID:"+realId);
-		return realId;
-	}
 
 	@Override
 	public Vector<String> getAttrDLink(Document doc, String EntryId)
