@@ -1,5 +1,7 @@
 package javparser;
 
+import javData.JavEntry;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -24,7 +26,7 @@ import org.json.simple.parser.ParseException;
 import org.jsoup.nodes.Document;
 
 public abstract class JavParser {
-	public String DbRoot = "./_DB_Default/";
+	public static String DbRoot = "./_DB_Default/";
     public String DbJsonPath = null;
     public String Name = "DefaultParser";
 

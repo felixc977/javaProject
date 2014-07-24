@@ -1,5 +1,7 @@
 package jfm;
 
+import javData.JavEntry;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Image;
@@ -11,8 +13,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTable;
-
-import javparser.JavEntry;
 
 public class SlavePanel extends JPanel {
 	private static final long serialVersionUID = 1L;

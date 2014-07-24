@@ -1,5 +1,8 @@
 package jfm;
 
+import javData.JavLocalData;
+import javData.JavLocalDataList;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -12,7 +15,13 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.Vector;
 
 import javax.swing.AbstractAction;
@@ -25,6 +34,10 @@ import javax.swing.KeyStroke;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumn;
 
+import org.json.simple.JSONArray;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 import javparser.JavParser;
 import javparser._91JavParser;
 import javparser._JavsukiParser;
@@ -32,6 +45,10 @@ import javparser._MaddParser;
 
 public class MasterPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
+	
+	private static String DbRoot = "./_DB_Default/";
+	private static String DbName = "LocalDB.json";
+	private JavLocalDataList jLocalDB;
 	
 	private JfmMain parentFrame;
 	private JTable table;
@@ -64,8 +81,55 @@ public class MasterPanel extends JPanel {
 		System.out.println(Name+" Diff Time ="+(currTime - startT)+"ms");
 		startT = currTime;
 	}
+	
+	public void initLocalDb() {
+		String DbJsonPath = DbRoot+DbName;
+		JSONArray jTotalData = new JSONArray();
+		jLocalDB = new JavLocalDataList();
+
+		File fileJav = new File(DbRoot);
+		if (!fileJav.exists()) {
+			System.out.println("Create DB_Dir:"+fileJav.mkdir());
+		}
+		
+		try {
+			FileReader fileReader = new FileReader(DbJsonPath);
+			BufferedReader bufferedReader = new BufferedReader(fileReader);
+			String jsonText = bufferedReader.readLine();
+			JSONParser parser = new JSONParser();
+			Object obj = parser.parse(jsonText);
+			jTotalData = (JSONArray) obj;
+			
+			jLocalDB = new JavLocalDataList(jTotalData);
+			bufferedReader.close();
+		} catch (ParseException | IOException e) {
+			;			
+		}
+	}
+	
+	public void writeLocalDb() {
+		String DbJsonPath = DbRoot+DbName;
+		StringWriter out = new StringWriter();
+		JSONArray jTotalData = jLocalDB.out();
+		
+		try {
+			jTotalData.writeJSONString(out);
+			String jsonText2 = out.toString().replaceAll("\\\\", "");
+
+			FileWriter fileWriter = new FileWriter(DbJsonPath);
+			BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+			bufferedWriter.write(jsonText2);
+			bufferedWriter.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+	}
 
 	public void init() {
+		/* init Local Data */
+		initLocalDb();
+
 		mySelf = this;
 		subPanel = new JPanel();
 		subPanel.setLayout(new BorderLayout());
@@ -226,6 +290,11 @@ public class MasterPanel extends JPanel {
 		String finalString="";
 		for(int i=0; i<model.getRowCount(); i++) {
 			if (model.getCheckAt(i)) {
+				JavLocalData jObj = new JavLocalData();
+				jObj.label = javParser.get(i).label;
+				jObj.downloaded = true;
+				jLocalDB.put(jObj);
+				
 				Vector<String> vDllink = javParser.get(i).dllink;
 				for (int j=0;j<vDllink.size();j++) {
 					finalString = finalString+vDllink.get(j)+"\n";
@@ -234,6 +303,7 @@ public class MasterPanel extends JPanel {
 		}
 		System.out.println(finalString);
 		
+		writeLocalDb();
 		StringSelection stringSelection = new StringSelection (finalString);
 		Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
 		clpbrd.setContents(stringSelection, null);

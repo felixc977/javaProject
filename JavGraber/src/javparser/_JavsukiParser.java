@@ -1,5 +1,7 @@
 package javparser;
 
+import javData.JavEntry;
+
 import java.io.IOException;
 import java.util.Vector;
 import java.util.concurrent.locks.Lock;

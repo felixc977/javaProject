@@ -1,6 +1,6 @@
 package jfm;
 
-import javparser.JavEntry;
+import javData.JavEntry;
 
 public class NotifyThread implements Runnable {
 	JavEntry gEntry;
