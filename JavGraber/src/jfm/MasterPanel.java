@@ -307,6 +307,7 @@ public class MasterPanel extends JPanel {
 		StringSelection stringSelection = new StringSelection (finalString);
 		Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
 		clpbrd.setContents(stringSelection, null);
+		model.fireTableDataChanged();
 	}
 
 	public void doGrabAction(int inDepth) {
@@ -356,12 +357,19 @@ public class MasterPanel extends JPanel {
 				int col) {
 			boolean bIsDir = ((row%2)==1);
 			
-			if (bIsDir) {
+			String entryLabel = javParser.get(row).label;
+			if (jLocalDB.get(entryLabel)!=null) {
+				Color lightBlue = new Color(150,150,200);
 				setOpaque(true);
-				setBackground(Color.LIGHT_GRAY);
+				setBackground(lightBlue);
+			} else if (bIsDir) {
+				Color lightGray1 = new Color(200,200,200);
+				setOpaque(true);
+				setBackground(lightGray1);
 			} else {
+				Color lightGray2 = new Color(180,180,180);
 				setOpaque(true);
-				setBackground(Color.PINK);
+				setBackground(lightGray2);
 			}
 			return super.getTableCellRendererComponent(table, value,
 					isSelected, hasFocus, row, col);

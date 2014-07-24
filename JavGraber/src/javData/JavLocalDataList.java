@@ -1,6 +1,8 @@
 package javData;
 
 import java.util.HashMap;
+import java.util.Map.Entry;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -28,14 +30,22 @@ public class JavLocalDataList {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	public JSONArray out() {
 		JSONArray jsonArray = new JSONArray();
+		for(Entry<String, JavLocalData> entry : listMap.entrySet()) {
+			//String key = entry.getKey();
+			JavLocalData jEntry = entry.getValue();
+			JSONObject jObj = new JSONObject();
+			jObj = JavLocalData.Data2JSON(jEntry);
+			jsonArray.add(jObj);
+		}
+
 		return jsonArray;
 	}
 	
 	public JavLocalData get(String qLabel) {
 		JavLocalData jEntry = listMap.get(qLabel);
-		System.out.println("[FUCK] test:"+jEntry);
 		return jEntry;
 	}
 	

@@ -7,12 +7,12 @@ import org.json.simple.JSONObject;
 public class JavLocalData {
 	public String label;
 	public boolean downloaded;
-	public boolean exsited;
+	public boolean existed;
 	
 	public JavLocalData()
 	{
 		this.downloaded = false;
-		this.exsited = false;
+		this.existed = false;
 		this.label = new String("");
 	}
 
@@ -28,7 +28,7 @@ public class JavLocalData {
 	public void clone(JavLocalData inData)
 	{
 		this.downloaded = inData.downloaded;
-		this.exsited = inData.exsited;
+		this.existed = inData.existed;
 		this.label = new String(inData.label);
 	}
 	
@@ -56,7 +56,7 @@ public class JavLocalData {
 
 		JSONObject jObj = new JSONObject();
 		jObj.put("label", inData.label);
-		jObj.put("exsited", inData.exsited);
+		jObj.put("existed", inData.existed);
 		jObj.put("downloaded", inData.downloaded);
 
 		return jObj;
@@ -70,7 +70,7 @@ public class JavLocalData {
 		
 		JavLocalData javData = new JavLocalData();
 		javData.label = (String) jObj.get("label");
-		javData.exsited = (boolean) jObj.get("exsited");
+		javData.existed = (boolean) jObj.get("existed");
 		javData.downloaded = (boolean) jObj.get("downloaded");
 
 		return javData;
