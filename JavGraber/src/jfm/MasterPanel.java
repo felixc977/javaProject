@@ -55,13 +55,18 @@ public class MasterPanel extends JPanel {
 	private JTableModel model;
 	private JScrollPane scrollPane;
 	private JTextField textfield;
-	private JPanel subPanel;
+	private JPanel topPanel;
 	private JButton actionButton;
 	private MasterPanel mySelf;
+
+	private JPanel botPanel;
+	private JTextField botTextField;
+	
 	private _MaddParser maddParser = new _MaddParser();	
 	private _JavsukiParser javsukiParser = new _JavsukiParser();
 	private _91JavParser _91javParser = new _91JavParser();
-	private JavParser javParser = javsukiParser;	
+	private JavParser javParser = javsukiParser;
+
 	private ProcessListener pListener = new MaddProcessListener();	
 	private int selectItem;
 	public long startT;
@@ -131,11 +136,11 @@ public class MasterPanel extends JPanel {
 		initLocalDb();
 
 		mySelf = this;
-		subPanel = new JPanel();
-		subPanel.setLayout(new BorderLayout());
-		this.add(subPanel, BorderLayout.NORTH);
+		topPanel = new JPanel();
+		topPanel.setLayout(new BorderLayout());
+		this.add(topPanel, BorderLayout.NORTH);
 		actionButton = new JButton("Update");
-		subPanel.add(actionButton, BorderLayout.EAST);
+		topPanel.add(actionButton, BorderLayout.EAST);
 		actionButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String inputText = textfield.getText();
@@ -150,7 +155,7 @@ public class MasterPanel extends JPanel {
 			}
 		});
 		textfield = new JTextField();
-		subPanel.add(textfield, BorderLayout.CENTER);
+		topPanel.add(textfield, BorderLayout.CENTER);
 		textfield.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "key_enter");
 		textfield.getActionMap().put("key_enter", new AbstractAction() {
 			private static final long serialVersionUID = 1L;
@@ -374,6 +379,11 @@ public class MasterPanel extends JPanel {
 			return super.getTableCellRendererComponent(table, value,
 					isSelected, hasFocus, row, col);
 		}
+	}
+	
+	private void initBotPanel() {
+		botPanel = new JPanel();
+		botTextField = new JTextField();
 	}
 	
 	public void switchProvider() {
