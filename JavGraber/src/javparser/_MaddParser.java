@@ -84,13 +84,16 @@ public class _MaddParser extends JavParser {
 		Document subDoc=null;
 		try {
 			subDoc = Jsoup.connect(tmpV.link).userAgent("Mozilla").get();
-			tmpV.label = getAttrRealId(tmpV.title);
 			tmpV.imgSrc = getAttrImage(subDoc);
 			tmpV.dllink = getAttrDLink(subDoc, tmpV.id);
 			tmpV.cast = getAttrCast(subDoc);
 			tmpV.date = getAttrDate(subDoc);
 			tmpV.imgPath = DbRoot+tmpV.id+".jpg";
 			saveImage(tmpV.imgSrc, tmpV.imgPath);
+			tmpV.label = getAttrRealId(tmpV.title);
+			if (tmpV.label==null) {
+				tmpV.label = parserName+"_"+tmpV.id;
+			}
 		} catch (IOException e) {
 			System.out.println("[Error] "+e.getMessage());
 			tmpV.imgPath = "";

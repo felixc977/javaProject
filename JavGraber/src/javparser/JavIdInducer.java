@@ -28,7 +28,7 @@ public class JavIdInducer {
 	}
 	
 	public static String transId(String inTitle) {
-		String sJavId = "";
+		String sJavId = null;
 		boolean bHits = false;
 		System.out.println("inTitle=>" + inTitle);
 
